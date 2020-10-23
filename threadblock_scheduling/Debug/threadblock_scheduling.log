@@ -1,0 +1,5 @@
+﻿  negotiation and leftover.cpp
+C:\Users\SM-PC\source\repos\threadblock_scheduling\threadblock_scheduling\negotiation and leftover.cpp(94,11): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+C:\Users\SM-PC\source\repos\threadblock_scheduling\threadblock_scheduling\negotiation and leftover.cpp(94,34): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+C:\Users\SM-PC\source\repos\threadblock_scheduling\threadblock_scheduling\negotiation and leftover.cpp(269,21): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+  threadblock_scheduling.vcxproj -> C:\Users\SM-PC\source\repos\threadblock_scheduling\Debug\threadblock_scheduling.exe
