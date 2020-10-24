@@ -3,27 +3,32 @@
 #include <vector>
 #include <fstream>
 #include <sstream>
-using namespace std; 
+using namespace std;
 
-struct linfo {
+struct linfo
+{
 	int sm;
 	int tb;
 	double time;
-
-
 };
-struct kernel_info {
+struct kernel_info
+{
 	string name;
 	double exec_time;
+	int category; // 0 : L1, 1 : Mem, 2 : Compute
 };
-bool cmp(const kernel_info& a, const kernel_info& b) {
-
-	if (a.exec_time < b.exec_time)
+bool cmp(const kernel_info &a, const kernel_info &b)
+{
+	if (a.category < b.category)
 		return true;
+	else if (a.category == b.category)
+		if (a.exec_time < b.exec_time)
+			return true;
 	return false;
-
 }
-double query_exec_time(string app_name) {
+
+double query_exec_time(string app_name)
+{
 	if (app_name.compare("cutcp") == 0)
 		return 46;
 	else if (app_name.compare("spmv") == 0)
@@ -64,18 +69,19 @@ double query_exec_time(string app_name) {
 		return 27.5;
 }
 
-double query_dp_gflops(string app_name) {
-	
+double query_dp_gflops(string app_name)
+{
+
 	if (app_name.compare("lava") == 0)
 		return 184.2948;
 	else if (app_name.compare("sy") == 0)
 		return 77.4519432434177;
 	else
 		return 0;
-
 }
 
-double query_sp_gflops(string app_name) {
+double query_sp_gflops(string app_name)
+{
 
 	if (app_name.compare("cutcp") == 0)
 		return 2480.79336363317;
@@ -96,7 +102,6 @@ double query_sp_gflops(string app_name) {
 	else if (app_name.compare("qs") == 0)
 		return 1743.54469579885;
 
-
 	else if (app_name.compare("cp") == 0)
 		return 2693.35062015917;
 	else if (app_name.compare("sg") == 0)
@@ -116,10 +121,12 @@ double query_sp_gflops(string app_name) {
 	else if (app_name.compare("bo") == 0)
 		return 2444.242942;
 
-	else return 0;
+	else
+		return 0;
 }
 
-double query_thrpt(string app_name) {
+double query_thrpt(string app_name)
+{
 	if (app_name.compare("cutcp") == 0)
 		return 1.9876;
 	else if (app_name.compare("spmv") == 0)
@@ -140,7 +147,6 @@ double query_thrpt(string app_name) {
 	else if (app_name.compare("qs") == 0)
 		return 219.44349;
 
-
 	else if (app_name.compare("cp") == 0)
 		return 0.022;
 	else if (app_name.compare("sg") == 0)
@@ -160,11 +166,11 @@ double query_thrpt(string app_name) {
 	else if (app_name.compare("dxtc") == 0)
 		return 161.4853;
 	else if (app_name.compare("bo") == 0)
-		return 2.6176  ;
-
+		return 2.6176;
 }
 
-float query_epc(string app_name) {
+float query_epc(string app_name)
+{
 	if (app_name.compare("cutcp") == 0)
 		return 5.67;
 	else if (app_name.compare("spmv") == 0)
@@ -184,7 +190,6 @@ float query_epc(string app_name) {
 		return 0.55;
 	else if (app_name.compare("qs") == 0)
 		return 10.06;
-
 
 	else if (app_name.compare("cp") == 0)
 		return 3.4;
@@ -206,16 +211,15 @@ float query_epc(string app_name) {
 		return 3.74;
 	else if (app_name.compare("bo") == 0)
 		return 5.92;
-
 }
 
-
-int query_reg(string app_name) {
-	if (app_name.compare("cutcp")==0)
+int query_reg(string app_name)
+{
+	if (app_name.compare("cutcp") == 0)
 		return 3328;
-	else if (app_name.compare("spmv")==0)
+	else if (app_name.compare("spmv") == 0)
 		return 5148;
-	else if (app_name.compare("lbm")==0)
+	else if (app_name.compare("lbm") == 0)
 		return 4800;
 	else if (app_name.compare("stencil") == 0)
 		return 4096;
@@ -250,10 +254,10 @@ int query_reg(string app_name) {
 		return 4032;
 	else if (app_name.compare("bo") == 0)
 		return 4096;
-
 }
 
-int query_smem(string app_name) {
+int query_smem(string app_name)
+{
 	if (app_name.compare("cutcp") == 0)
 		return 4019;
 	else if (app_name.compare("spmv") == 0)
@@ -294,13 +298,59 @@ int query_smem(string app_name) {
 		return 516;
 }
 
-void get_info(string app_name, vector<vector<double>> *app, int iter) {
+int query_category(string app_name){
+// 0 : L1, 1 : Mem, 2 : Compute
+if (app_name.compare("cutcp") == 0)
+		return 2;
+	else if (app_name.compare("spmv") == 0)
+		return 1;
+	else if (app_name.compare("lbm") == 0)
+		return 0;
+	else if (app_name.compare("stencil") == 0)
+		return 1;
+	else if (app_name.compare("tpacf") == 0)
+		return 2;
+	else if (app_name.compare("lava") == 0)
+		return 2;
+	else if (app_name.compare("bs") == 0)
+		return 1;
+	else if (app_name.compare("fdtd") == 0)
+		return 2;
+	else if (app_name.compare("qs") == 0)
+		return 2;
+	else if (app_name.compare("sg") == 0)
+		return 1;
+	else if (app_name.compare("cp") == 0)
+		return 2;
+	else if (app_name.compare("rd") == 0)
+		return 1;
+	else if (app_name.compare("cov") == 0)
+		return 1;
+	else if (app_name.compare("sy") == 0)
+		return 1;
+	else if (app_name.compare("conv") == 0)
+		return 0;
+	else if (app_name.compare("nw") == 0)
+		return 1;
+	else if (app_name.compare("hs") == 0)
+		return 1;
+	else if (app_name.compare("dxtc") == 0)
+		return 2;
+	else if (app_name.compare("bo") == 0)
+		return 2;
+
+
+}
+
+void get_info(string app_name, vector<vector<double>> *app, int iter)
+{
 	string line;
 	ifstream file;
 
 	file.open(app_name + ".txt");
 
-	if (file.is_open()) {
+	if (file.is_open())
+	{
 		while (getline(file, line))
 		{
 			istringstream iss(line);
@@ -309,28 +359,21 @@ void get_info(string app_name, vector<vector<double>> *app, int iter) {
 			int sm = stoi(word);
 
 			iss >> word; // tb
-			
-
 
 			iss >> word;
 			double time = stod(word);
 			app->resize(31);
-		//	app.resize(31);
+			//	app.resize(31);
 			app->at(sm).push_back(time);
-	//		app.at(sm).push_back(time);
-			
+			//		app.at(sm).push_back(time);
+
 			//cout << line << endl;
 		}
 	}
-
-
-
 }
 
-
-
-void get_info(string app_name, vector<double> *infovec) {
-
+void get_info(string app_name, vector<double> *infovec)
+{
 
 	int sm = 0, tb = 0;
 	double time = 0;
@@ -339,7 +382,8 @@ void get_info(string app_name, vector<double> *infovec) {
 
 	file.open(app_name + ".txt");
 
-	if (file.is_open()) {
+	if (file.is_open())
+	{
 		while (getline(file, line))
 		{
 			istringstream iss(line);
@@ -352,13 +396,9 @@ void get_info(string app_name, vector<double> *infovec) {
 
 			iss >> word;
 			time = stod(word);
-			
+
 			//infovec.push_back({ sm, tb, time });
 			infovec[sm].push_back(time);
-			 
 		}
-
 	}
-
-
 }
