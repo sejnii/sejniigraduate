@@ -6,8 +6,8 @@
 #include <string>
 #define MAXREG 65536
 #define MAXSMEM 49152
-#define MAX_DP_GFLOPS 12150
-#define MAX_SP_GFLOPS 379.7
+#define MAX_DP_GFLOPS 379.7
+#define MAX_SP_GFLOPS 12150
 #define MAX_THRPT 547.6
 using namespace std;
 
@@ -66,18 +66,18 @@ bool cmp(const kernel_info &a, const kernel_info &b);
 
 vector<vector<vector<double>>> app;
 
-vector<vector<linfo>> saturate_app; //TB ���� saturate TB ã�� ����(�� SM ��) �� ���� (�� �����)
+vector<vector<linfo>> saturate_app; // TB 기준 saturate TB 찾은 벡터(각 SM 당) 의 벡터(각 응용당)
 
 vector<string> app_name;
 vector<kernel_info> kernel_info_list;
 vector<int> reg;
 vector<int> smem;
 
-vector<linfo> sat_point_app; //  SM ���� saturate SM ã�� ���� (�� �����)
+vector<linfo> sat_point_app; //  SM 기준 saturate SM 찾은 벡터 (각 응용당)
 
-vector<vector<string>> chosen_kernel; // ��� �� Chosen kernel���� list {A, B}, {C}, {D,E,F} .... �̷������� chosen kernel�� �Բ� ��ġ�� ������� �ǹ�
+vector<vector<string>> chosen_kernel;// 결과 값 Chosen kernel들의 list {A, B}, {C}, {D,E,F} .... 이런식으로 chosen kernel은 함께 배치될 응용들을 의미
 
-vector<bool> flags; // �̹� �����ٸ� �Ǿ����� Ȯ���ϴ� flag ���� -> 1�̸� �̹� �����ٸ� ��
+vector<bool> flags;// 이미 스케줄링 되었는지 확인하는 flag 벡터 -> 1이면 이미 스케줄링 됨
 
 int main()
 {
@@ -90,7 +90,7 @@ int main()
 
 	input_app_name();
 
-	sort(kernel_info_list.begin(), kernel_info_list.end(), cmp); // Shortes Job First �� ����
+	sort(kernel_info_list.begin(), kernel_info_list.end(), cmp); // Shortes Job First 로 정렬
 
 #ifdef DEBUG
 	cout << "Sorted kernels" << endl;
@@ -127,11 +127,7 @@ int main()
 #endif
 
 	double rate = 0.05;
-	/*cout << "TB convergence�� �Ǵ��� rate�� �Է��ϼ��� ex> 0.05 -> 5%�� �ǹ���" << endl;
 
-	cin >> rate;
-	if (rate == -1)
-		break;*/
 	saturate_app.resize(app_name.size());
 	for (int i = 0; i < app_name.size(); i++)
 	{
@@ -155,7 +151,7 @@ int main()
 	double sm_rate = 0.01;
 
 	sat_point_app.resize(app_name.size());
-	bool flag = true; // ��� app�� �Ҵ����� �� ���ٸ� false
+
 
 	for (int i = 0; i < app_name.size(); i++)
 	{
@@ -168,7 +164,7 @@ int main()
 		cout << sat_point_app[i].sm << " " << sat_point_app[i].tb << " " << sat_point_app[i].time << endl;
 	}
 
-	/////////////////////////////////////������� ��� app���� saturation point ã��///////////////////////////////
+	/////////////////////////////////////여기까지 모든 app들의 saturation point 찾기///////////////////////////////
 
 	int iter = 0;
 	while (1)
@@ -184,7 +180,7 @@ int main()
 		bool flag_m = false;  // check if there is M in CK
 		bool flag_c = false;  // check if there is C with bigger EPC than 1
 		string l1_name = "";
-		for (int index = iter; index <= (index - iter); index++)
+		for (int index = iter; index < kernel_info_list.size(); index++)
 		{
 			if ((flags[index] != 1) && (flag_l2 != true))
 			{
@@ -192,16 +188,16 @@ int main()
 
 				///////////////////// first stage ///////////////////////////////////
 				int sm_cnt = 0;
-				for (int i = 0; i < kernel_info_list.size(); i++)
+				for (int i = 0; i <= (index - iter) ; i++)
 				{
-					can_allocate_sm(&sm_cnt, 0, index);
+					can_allocate_sm(&sm_cnt, i, index);
 					if (sm_cnt >= sat_point_app[index].sm)
 						break;
 				}
 				if (sm_cnt < sat_point_app[index].sm)
 				{
 					//flag = false;
-					break;
+					continue;
 				}
 				else
 				{
@@ -219,7 +215,7 @@ int main()
 				else
 				{
 					//flag = false;
-					break;
+					continue;
 				}
 
 				/////////////////////// third stage ////////////////////////////
@@ -228,11 +224,12 @@ int main()
 					if (flag_l)
 					{ //L1 sensitive can not be placed with L1 // if this flag is false, it would be the first kernel (L1 has the highest priority)
 						//flag = false;
-						break;
+						continue;
 					}
 					else
 					{
 						flag_l = true;
+						l1_name = kernel_info_list[index].name;
 						//flag = true;
 						//flag_iter =true;
 					}
@@ -244,7 +241,7 @@ int main()
 						if (!l1_rule(kernel_info_list[index].name, l1_name))
 						{ // check if this kernel is suitable with L1 sensitive
 							//flag = false;
-							break;
+							continue;
 						}
 						else
 						{
@@ -259,21 +256,25 @@ int main()
 							if (flag_m == 1)
 							{
 								//flag = false;
-								break;
+								continue;
 							}
 							else
 							{
 								flag_m = true;
 								//flag= true;
-								flag_iter = true;
+							//	flag_iter = true;
 							}
 						}
 						else
 						{ //if this kernel is C
 							if (flag_c == 1)
 							{
+								float epc = query_epc(kernel_info_list[index].name);
+								if (epc > 1) {
+									continue;
+								}
 								//flag = false;
-								break;
+								
 							}
 							else
 							{
@@ -286,6 +287,7 @@ int main()
 						}
 					}
 				}
+				sm_cnt = 0;
 				// success every stage
 				for (int i = 0; i <= (index - iter); i++)
 				{
@@ -299,6 +301,9 @@ int main()
 		}*/
 
 
+				sum_sp_gflops += sp_flops;
+				sum_dp_gflops += dp_flops;
+				sum_thrpt += thrpt;
 				
 					tmp.push_back(kernel_info_list[index].name);
 					flags[index] = 1;
@@ -308,7 +313,6 @@ int main()
 		}
 		if (flag_iter == true)
 		{
-			cout << "static info scheduling result" << endl;
 			cout << "chosen kernel [" << iter << "] : " << endl;
 			for (int i = 1; i < 31; i++)
 			{
@@ -340,8 +344,7 @@ void input_app_name()
 
 		string input;
 
-		cout << iter << "�� ������ �̸��� �Է��ϼ���" << endl;
-
+		cout << "input a name of application ["<<iter << "] : " << endl;
 		cin >> input;
 
 		if (input.compare("-1") == 0)
@@ -374,8 +377,8 @@ void find_tb_convergence(int num, double rate)
 	{
 		for (int j = 0; j < app[num][i].size(); j++)
 		{
-			if ((j + 1 != app[num][i].size()) && (app[num][i][j] * (1.00 - rate) < app[num][i][j + 1]))
-			{ //converge��� �Ǵ�
+			if ((j + 1 != app[num][i].size()) && (app[num][i][j] * (1.00 - rate) < app[num][i][j + 1]))//converge라고 판단
+			{ 
 				if ((j + 2 != app[num][i].size()) && app[num][i][j] * (1.00 - rate) * (1.00 - rate) < app[num][i][j + 2])
 				{
 					if ((j + 3 != app[num][i].size()) && (app[num][i][j] * (1.00 - rate) * (1.00 - rate) * (1.00 - rate) < app[num][i][j + 3]))
@@ -437,7 +440,7 @@ void allocate_sm(int *sm_cnt, int cnt_turn, int app_num)
 {
 	int i = app_num;
 	for (int j = 1; j < 31; j++)
-	{ //sm �ϳ��� Ȯ�� -> app count == cnt_turn �� sm ã��
+	{  //sm 하나씩 확인 -> app count == cnt_turn 인 sm 찾기
 		if (*sm_cnt < sat_point_app[i].sm)
 		{
 			if (sms[j].app_count == cnt_turn)
@@ -461,17 +464,13 @@ void can_allocate_sm(int *sm_cnt, int cnt_turn, int app_num)
 {
 	int i = app_num;
 	for (int j = 1; j < 31; j++)
-	{ //sm �ϳ��� Ȯ�� -> app count == cnt_turn �� sm ã��
+	{  //sm 하나씩 확인 -> app count == cnt_turn 인 sm 찾기
 		if (*sm_cnt < sat_point_app[i].sm)
 		{
 			if (sms[j].app_count == cnt_turn)
 			{
 				if (sms[j].reg - reg[i] * sat_point_app[i].tb > 0 && sms[j].smem - smem[i] * sat_point_app[i].tb > 0)
 				{
-					sms[j].reg -= reg[i] * sat_point_app[i].tb;
-					sms[j].smem -= smem[i] * sat_point_app[i].tb;
-					sms[j].app_count++;
-					sms[j].app_list.push_back(kernel_info_list[i].name);
 					(*sm_cnt)++;
 				}
 			}

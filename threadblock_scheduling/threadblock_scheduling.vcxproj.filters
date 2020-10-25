@@ -33,5 +33,11 @@
     <ClCompile Include="hierarchical scheduling.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="hierarchical-1stage.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="hierarchical-2stage.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

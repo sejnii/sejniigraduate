@@ -1,2 +1,3 @@
 ﻿  hierarchical scheduling.cpp
+C:\Users\셎닝\source\repos\threadblock_scheduling\threadblock_scheduling\hierarchical scheduling.cpp(504): warning C4715: 'l1_rule': 모든 제어 경로에서 값을 반환하지는 않습니다.
   threadblock_scheduling.vcxproj -> C:\Users\셎닝\source\repos\threadblock_scheduling\x64\Debug\threadblock_scheduling.exe

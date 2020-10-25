@@ -319,7 +319,7 @@ if (app_name.compare("cutcp") == 0)
 	else if (app_name.compare("qs") == 0)
 		return 2;
 	else if (app_name.compare("sg") == 0)
-		return 1;
+		return 2;
 	else if (app_name.compare("cp") == 0)
 		return 2;
 	else if (app_name.compare("rd") == 0)
